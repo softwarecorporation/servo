@@ -8,7 +8,7 @@ use js::context::JSContext;
 use rsa::pkcs8::spki::{DecodePublicKey, EncodePublicKey};
 use rsa::pkcs8::{DecodePrivateKey, EncodePrivateKey};
 use rsa::traits::{PrivateKeyParts, PublicKeyParts};
-use rsa::{BoxedUint, RsaPrivateKey, RsaPublicKey};
+use rsa::{BoxedUint, PrivateKey, PublicKey};
 
 use crate::dom::bindings::codegen::Bindings::CryptoKeyBinding::{
     CryptoKeyMethods, CryptoKeyPair, KeyType, KeyUsage,
@@ -79,9 +79,9 @@ pub(crate) fn generate_key(
     // the modulusLength attribute of normalizedAlgorithm and RSA public exponent equal to the
     // publicExponent attribute of normalizedAlgorithm.
     // Step 3. If generation of the key pair fails, then throw an OperationError.
-    // NOTE: If the public exponent is even, it is invalid for RSA, and RsaPrivateKey::new_with_exp
-    // should throw an error. However, RsaPrivateKey::new_with_exp would take a long period of time
-    // to validate this case. So, we manually check it before running RsaPrivateKey::new_with_exp,
+    // NOTE: If the public exponent is even, it is invalid for RSA, and PrivateKey::new_with_exp
+    // should throw an error. However, PrivateKey::new_with_exp would take a long period of time
+    // to validate this case. So, we manually check it before running PrivateKey::new_with_exp,
     // in order to throw error eariler.
     if normalized_algorithm
         .public_exponent
@@ -95,7 +95,7 @@ pub(crate) fn generate_key(
     let mut rng = rand::rng();
     let modulus_length = normalized_algorithm.modulus_length as usize;
     let public_exponent = BoxedUint::from_be_slice_vartime(&normalized_algorithm.public_exponent);
-    let private_key = RsaPrivateKey::new_with_exp(&mut rng, modulus_length, public_exponent)
+    let private_key = PrivateKey::new_with_exp(&mut rng, modulus_length, public_exponent)
         .map_err(|_| Error::Operation(Some("Failed to generate RSA private key".into())))?;
     let public_key = private_key.to_public_key();
 
@@ -262,7 +262,7 @@ pub(crate) fn import_key(
             // true.
             // Step 2.6. If an error occurred while parsing, or it can be determined that publicKey
             // is not a valid public key according to [RFC3447], then throw a DataError.
-            let public_key = RsaPublicKey::from_public_key_der(key_data).map_err(|_| {
+            let public_key = PublicKey::from_public_key_der(key_data).map_err(|_| {
                 Error::Data(Some(
                     "Failed to import RSA public key in SPKI format".into(),
                 ))
@@ -315,7 +315,7 @@ pub(crate) fn import_key(
             // to true.
             // Step 2.6. If an error occurred while parsing, or if rsaPrivateKey is not a valid RSA
             // private key according to [RFC3447], then throw a DataError.
-            let rsa_private_key = RsaPrivateKey::from_pkcs8_der(key_data).map_err(|_| {
+            let rsa_private_key = PrivateKey::from_pkcs8_der(key_data).map_err(|_| {
                 Error::Data(Some(
                     "Failed to import RSA private key in PKCS#8 format".into(),
                 ))
@@ -571,7 +571,7 @@ pub(crate) fn import_key(
                 // interpreting jwk according to Section 6.3.2 of JSON Web Algorithms [JWA].
                 // Step 2.9.3. If privateKey is not a valid RSA private key according to [RFC3447],
                 // then throw a DataError.
-                let private_key = RsaPrivateKey::from_components(
+                let private_key = PrivateKey::from_components(
                     BoxedUint::from_be_slice_vartime(&n),
                     BoxedUint::from_be_slice_vartime(&e),
                     BoxedUint::from_be_slice_vartime(&d),
@@ -604,7 +604,7 @@ pub(crate) fn import_key(
                 // interpreting jwk according to Section 6.3.1 of JSON Web Algorithms [JWA].
                 // Step 2.9.3. If publicKey can be determined to not be a valid RSA public key
                 // according to [RFC3447], then throw a DataError.
-                let public_key = RsaPublicKey::new(
+                let public_key = PublicKey::new(
                     BoxedUint::from_be_slice_vartime(&n),
                     BoxedUint::from_be_slice_vartime(&e),
                 )
@@ -951,15 +951,14 @@ pub(crate) fn export_key(
                         &NonZero::new(p_i.wrapping_sub(BoxedUint::one()))
                             .expect("Prime numbers must be greater than one"),
                     );
-                    let non_zero_pi =
-                        NonZero::new(p_i.clone()).expect("Prime numbers must be non-zero");
+                    let non_zero_pi = p_i.as_nz_ref();
                     let t_i = primes
                         .iter()
                         .take(i - 1)
                         .fold(BoxedUint::one(), |product, p_j| {
-                            product.mul_mod(p_j, &non_zero_pi)
+                            product.mul_mod(p_j, non_zero_pi)
                         })
-                        .invert_mod(&non_zero_pi)
+                        .invert_mod(non_zero_pi)
                         .ok_or(Error::Operation(Some(
                             "Failed to compute factor CRT coefficient of other RSA primes".into(),
                         )))?;

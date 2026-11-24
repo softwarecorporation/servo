@@ -207,7 +207,7 @@ rayon = "1"
 read-fonts = "0.39.2"
 regex = "1.12"
 resvg = "0.47.0"
-rsa = "=0.10.0-rc.18"
+rsa = { version = "0.10.0", features = ["pkcs1v15"] }
 rusqlite = "0.37"
 rustc-demangle = "0.1"
 rustc-hash = "2.1.2"
