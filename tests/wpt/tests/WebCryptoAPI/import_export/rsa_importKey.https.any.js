@@ -168,6 +168,27 @@
         return result;
     }
 
+// Disposable 2096-bit fixture with 1056/1040-bit factors: the larger factor
+// exceeds ceil(bit_length(n)/2). Import/export must not require balanced factors.
+const unbalancedPrivateKey = {
+    jwk: {
+        kty: "RSA",
+        n: "pXmEJdEPY4rgVnqkTBwIrGIPUvHGfj5ZVDFZtIdVCygbEdV8OWocd_CSh129mDARCR6ljmSoDnGkniCIVmsXztTTgjyuOr3bHJbaP-5hoccWxd-3DQUTbSLI436VSWdbL5qs8MK-onepD2LVc2D4x-OFlWWJHtoryti6CRfyow2Yd_TPC21HQuJGyh0PqOEQ9u0NgMTt4uuyp19i-a-FTnup63cE8qkoP_vVMW2tsYZVgDzLTf9xyvAYHUpyV91SeyRvQbE53ujTa3yaWmcyEduzGBcud8f_nuYEVRIe3BAYSsp2cKdXZ2b6zAA5tChllysEk3nh4Hh_ThCILbnxSotxZOQXPQ",
+        e: "AQAB",
+        d: "DVD8G3b5gA87AnqYIi_XWtgBV7FxQdOOqMHX8Dk71MwDcan2d0BcziIkCJS4nzivBkbbF9xt0cu_baI8lofDwLdL1h1AACYrLd_N7HsojDZTVNUuC_QungfAlt4m8WNJ6UjPRgjGApkSl9RiTQiuvJdItr8XC86O26IZRoYQ1qJPdLgAXItVEmDwU8kpkWeF7cH5499kIq9pPYTDlFBC3QmzJheb4MAk06OtwLdtaDOmC1RSu05T5seSMsFu_eKeajUKBze-Krs4aHBJSDKOpHwrhtm-_6G0eNnqX9xJ-fIEMXAtSIkZ3-oNzmvlczNQj40UG7rQuHC7y-TCNaq0TzPFB85pAQ",
+        p: "xLLM4geGSkANzNsQUci3ATqR2JHkWfpjncdhBdpU_MHKMtDtLu_mcxO_8XA4bftx7gVaKdKHXq4v0ZWUrxV0JdZ3zrEJ8C39LpW1pTDBxvF-nsiXTDyzpWfK0gAw4i_Dx4rA5gwZG8lqv7slVsB-pEjcfa1sazE_r9fa2rj6W2qbqVdh",
+        q: "11zdBTWNi2jlKC9mSEZR0v_GY_FY4xB7BbD9I2guVDJXiQUQp4_fOkldPHdIummpVPXLSNYAe515Sdl5FGsGFpbXinGNd_qj1NH7iNVcx-jrx8p8_o1wegGC2AfYoftQOhNOjqlG6JiNW57iNtUwwQliy--WQNUVK1Dm3h1gN6L5XQ",
+        dp: "TP8IwHndkXcdb9FYxArjyDFbIgGJ98bR89M2IYpjtkVNlzK9haAW_3j9q88X58WDxX6G2tQ0dVWOFmaNOzQUsTMQ1vHqSABYmUG1RyKc1_l0bUdsIkWotNi6RhYZDJFR--xOsj6OHZhslvz1Es5rRHfZB8E5LYSrv3OpkfDS37INmO5B",
+        dq: "JkeyXZesRihp-x-ZvaUKLEgcem1O0GWAiH1yMVX2Ti74kjldQXt4QUMDGJlXSxM27wwViyfGxDI0eeT2-aMgXOmI_Gm8rKPXdR-x5xuNt1b2effLCfAYGweju0SBxCEInJoL7521Jejfz3ZJXVe9p8JEVl2KxpFZhu6Fatur25fTXQ",
+        qi: "YBsfUBGX0pUcq9-opdV8CaY41EITmlbV4IRpLpElBsgFpWyJXD6NnZjbm40w5H5HptR_npkvRKxukiHxUaiulhp-lVu4klBODL3WzSyguhKvTuJzTl1BxKTxi-FyJIciyZ63gd7CFz2QQxB6aLoTb80K1xXnsjtw3VjqGtO_K7WdJWGd"
+    },
+    pkcs8: Uint8Array.from(atob("MIIE2AIBADANBgkqhkiG9w0BAQEFAASCBMIwggS+AgEAAoIBBwCleYQl0Q9jiuBWeqRMHAisYg9S8cZ+PllUMVm0h1ULKBsR1Xw5ahx38JKHXb2YMBEJHqWOZKgOcaSeIIhWaxfO1NOCPK46vdsclto/7mGhxxbF37cNBRNtIsjjfpVJZ1svmqzwwr6id6kPYtVzYPjH44WVZYke2ivK2LoJF/KjDZh39M8LbUdC4kbKHQ+o4RD27Q2AxO3i67KnX2L5r4VOe6nrdwTyqSg/+9Uxba2xhlWAPMtN/3HK8BgdSnJX3VJ7JG9BsTne6NNrfJpaZzIR27MYFy53x/+e5gRVEh7cEBhKynZwp1dnZvrMADm0KGWXKwSTeeHgeH9OEIgtufFKi3Fk5Bc9AgMBAAECggEGDVD8G3b5gA87AnqYIi/XWtgBV7FxQdOOqMHX8Dk71MwDcan2d0BcziIkCJS4nzivBkbbF9xt0cu/baI8lofDwLdL1h1AACYrLd/N7HsojDZTVNUuC/QungfAlt4m8WNJ6UjPRgjGApkSl9RiTQiuvJdItr8XC86O26IZRoYQ1qJPdLgAXItVEmDwU8kpkWeF7cH5499kIq9pPYTDlFBC3QmzJheb4MAk06OtwLdtaDOmC1RSu05T5seSMsFu/eKeajUKBze+Krs4aHBJSDKOpHwrhtm+/6G0eNnqX9xJ+fIEMXAtSIkZ3+oNzmvlczNQj40UG7rQuHC7y+TCNaq0TzPFB85pAQKBhQDEssziB4ZKQA3M2xBRyLcBOpHYkeRZ+mOdx2EF2lT8wcoy0O0u7+ZzE7/xcDht+3HuBVop0oderi/RlZSvFXQl1nfOsQnwLf0ulbWlMMHG8X6eyJdMPLOlZ8rSADDiL8PHisDmDBkbyWq/uyVWwH6kSNx9rWxrMT+v19rauPpbapupV2ECgYMA11zdBTWNi2jlKC9mSEZR0v/GY/FY4xB7BbD9I2guVDJXiQUQp4/fOkldPHdIummpVPXLSNYAe515Sdl5FGsGFpbXinGNd/qj1NH7iNVcx+jrx8p8/o1wegGC2AfYoftQOhNOjqlG6JiNW57iNtUwwQliy++WQNUVK1Dm3h1gN6L5XQKBhEz/CMB53ZF3HW/RWMQK48gxWyIBiffG0fPTNiGKY7ZFTZcyvYWgFv94/avPF+fFg8V+htrUNHVVjhZmjTs0FLEzENbx6kgAWJlBtUcinNf5dG1HbCJFqLTYukYWGQyRUfvsTrI+jh2YbJb89RLOa0R32QfBOS2Eq79zqZHw0t+yDZjuQQKBgiZHsl2XrEYoafsfmb2lCixIHHptTtBlgIh9cjFV9k4u+JI5XUF7eEFDAxiZV0sTNu8MFYsnxsQyNHnk9vmjIFzpiPxpvKyj13UfsecbjbdW9nn3ywnwGBsHo7tEgcQhCJyaC++dtSXo3892SV1XvafCRFZdisaRWYbuhWrbq9uX010CgYRgGx9QEZfSlRyr36il1XwJpjjUQhOaVtXghGkukSUGyAWlbIlcPo2dmNubjTDkfkem1H+emS9ErG6SIfFRqK6WGn6VW7iSUE4MvdbNLKC6Eq9O4nNOXUHEpPGL4XIkhyLJnreB3sIXPZBDEHpouhNvzQrXFeeyO3DdWOoa078rtZ0lYZ0="), c => c.charCodeAt(0))
+};
+for (const format of ["jwk", "pkcs8"]) {
+    testFormat(format, {name: "RSA-OAEP", hash: "SHA-256"},
+        unbalancedPrivateKey, 2096, ["decrypt"], true);
+}
+
     // Convert method parameters to a string to uniquely name each test
     function parameterString(format, data, algorithm, extractable, usages) {
         if ("byteLength" in data) {

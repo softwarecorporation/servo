@@ -38,8 +38,8 @@ pub(crate) enum CryptoKeyOrCryptoKeyPair {
 /// trait, which signifies that the type will call `Zeroize::zeroize` on `Drop` to securely erase
 /// the secret from memory.
 pub(crate) enum Handle {
-    RsaPrivateKey(rsa::RsaPrivateKey),
-    RsaPublicKey(rsa::RsaPublicKey),
+    RsaPrivateKey(rsa::PrivateKey),
+    RsaPublicKey(rsa::PublicKey),
     P256PrivateKey(p256::SecretKey),
     P384PrivateKey(p384::SecretKey),
     P521PrivateKey(p521::SecretKey),

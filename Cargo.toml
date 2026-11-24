@@ -10,7 +10,12 @@ members = [
     "tests/unit/*",
 ]
 default-members = ["ports/servoshell"]
-exclude = [".cargo", "support/crown"]
+exclude = [
+    ".cargo",
+    "support/crown",
+    "support/dependency-backports/webdriver",
+    "support/dependency-backports/sea-query-rusqlite",
+]
 
 [workspace.package]
 version = "0.3.0"
@@ -27,7 +32,7 @@ publish = true
 # Please also note, that the **default** Rust version in rust-toolchain.toml may be
 # bumped freely.
 # Skip 1.90 which causes mis-compilation: https://github.com/rust-lang/rust/issues/147265
-rust-version = "1.88.0"
+rust-version = "1.89.0"
 
 [workspace.dependencies]
 accesskit = { version = "0.24.0", features = ["serde"] }
@@ -207,8 +212,8 @@ rayon = "1"
 read-fonts = "0.39.2"
 regex = "1.12"
 resvg = "0.47.0"
-rsa = "=0.10.0-rc.18"
-rusqlite = "0.37"
+rsa = { version = "0.10.0", features = ["pkcs1v15"] }
+rusqlite = "0.41"
 rustc-demangle = "0.1"
 rustc-hash = "2.1.2"
 rustls = { version = "0.23", default-features = false, features = ["logging", "std", "tls12"] }
@@ -216,7 +221,7 @@ rustls-pki-types = "1.14"
 rustls-platform-verifier = "0.7.0"
 rusty_v8 = "0.32.1"
 sea-query = { version = "=1.0.0-rc.31", default-features = false, features = ["backend-sqlite", "derive"] }
-sea-query-rusqlite = "=0.8.0-rc.15"
+sea-query-rusqlite = { version = "=0.8.0-rc.15", path = "support/dependency-backports/sea-query-rusqlite" }
 selectors = { git = "https://github.com/servo/stylo", rev = "9d12364ecccb69cd26622391180f130c5346e393" }
 seq-macro = "0.3.6"
 serde = "1.0.228"
@@ -273,7 +278,7 @@ vello = "0.9"
 vello_cpu = "0.0.9"
 warp = "0.4.2"
 web_atoms = "0.2.4"
-webdriver = { version = "0.53.0", default-features = false }
+webdriver = { version = "0.53.0", path = "support/dependency-backports/webdriver", default-features = false }
 webpki-roots = "1.0"
 webrender = { version = "0.69", features = ["capture"] }
 webrender_api = "0.69"
