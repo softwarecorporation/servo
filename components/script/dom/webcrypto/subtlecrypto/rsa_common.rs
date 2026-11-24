@@ -5,8 +5,9 @@
 use base64ct::{Base64UrlUnpadded, Encoding};
 use crypto_bigint::NonZero;
 use js::context::JSContext;
+use rsa::pkcs8::der::Decode;
 use rsa::pkcs8::spki::{DecodePublicKey, EncodePublicKey};
-use rsa::pkcs8::{DecodePrivateKey, EncodePrivateKey};
+use rsa::pkcs8::{EncodePrivateKey, PrivateKeyInfoRef};
 use rsa::traits::{PrivateKeyParts, PublicKeyParts};
 use rsa::{BoxedUint, PrivateKey, PublicKey};
 
@@ -31,6 +32,58 @@ pub(crate) enum RsaAlgorithm {
     RsassaPkcs1v1_5,
     RsaPss,
     RsaOaep,
+}
+
+fn import_private_components(
+    n: BoxedUint,
+    e: BoxedUint,
+    d: BoxedUint,
+    primes: Vec<BoxedUint>,
+) -> rsa::Result<PrivateKey> {
+    // Import policy is always modulus-width, including balanced keys. This preserves
+    // legacy imports without choosing a width from secret factors or retrying a failure.
+    // The upstream constructor still validates the key and precomputes its CRT values.
+    PrivateKey::from_components_with_wide_primes(n, e, d, primes)
+}
+
+fn import_pkcs8_private_key(key_data: &[u8]) -> rsa::pkcs8::Result<PrivateKey> {
+    use rsa::pkcs1;
+    use rsa::pkcs8::der::asn1::{Null, ObjectIdentifier};
+
+    const ID_RSASSA_PSS: ObjectIdentifier = ObjectIdentifier::new_unwrap("1.2.840.113549.1.1.10");
+    let invalid_key = || rsa::pkcs8::Error::from(rsa::pkcs8::KeyError::Invalid);
+    let key_info = PrivateKeyInfoRef::from_der(key_data)?;
+    // Preserve the algorithm identifiers and parameters accepted by rsa's decoder.
+    match key_info.algorithm.oid {
+        pkcs1::ALGORITHM_OID => {
+            if key_info.algorithm.parameters_any()? != Null.into() {
+                return Err(invalid_key());
+            }
+        },
+        ID_RSASSA_PSS if key_info.algorithm.parameters.is_none() => {},
+        _ => return Err(invalid_key()),
+    }
+    let key = pkcs1::RsaPrivateKeyRef::try_from(key_info.private_key).map_err(|_| invalid_key())?;
+    if key.version() != pkcs1::Version::TwoPrime {
+        return Err(invalid_key());
+    }
+
+    // As in rsa's decoder, private components must fit the public modulus's byte width.
+    let bits = u32::try_from(key.modulus.as_bytes().len())
+        .ok()
+        .and_then(|len| len.checked_mul(8))
+        .ok_or_else(invalid_key)?;
+    let component = |bytes: &[u8]| BoxedUint::from_be_slice(bytes, bits).map_err(|_| invalid_key());
+    import_private_components(
+        component(key.modulus.as_bytes())?,
+        BoxedUint::from_be_slice_vartime(key.public_exponent.as_bytes()),
+        component(key.private_exponent.as_bytes())?,
+        vec![
+            component(key.prime1.as_bytes())?,
+            component(key.prime2.as_bytes())?,
+        ],
+    )
+    .map_err(|_| invalid_key())
 }
 
 /// <https://w3c.github.io/webcrypto/#rsassa-pkcs1-operations-generate-key>
@@ -315,7 +368,7 @@ pub(crate) fn import_key(
             // to true.
             // Step 2.6. If an error occurred while parsing, or if rsaPrivateKey is not a valid RSA
             // private key according to [RFC3447], then throw a DataError.
-            let rsa_private_key = PrivateKey::from_pkcs8_der(key_data).map_err(|_| {
+            let rsa_private_key = import_pkcs8_private_key(key_data).map_err(|_| {
                 Error::Data(Some(
                     "Failed to import RSA private key in PKCS#8 format".into(),
                 ))
@@ -364,10 +417,10 @@ pub(crate) fn import_key(
                     // "decrypt" or "unwrapKey", then throw a SyntaxError.
                     // * If the d field of jwk is not present and usages contains an entry which is
                     // not "encrypt" or "wrapKey", then throw a SyntaxError.
-                    if jwk.d.is_some() &&
-                        usages.iter().any(|usage| {
-                            !matches!(usage, KeyUsage::Decrypt | KeyUsage::UnwrapKey)
-                        })
+                    if jwk.d.is_some()
+                        && usages
+                            .iter()
+                            .any(|usage| !matches!(usage, KeyUsage::Decrypt | KeyUsage::UnwrapKey))
                     {
                         return Err(Error::Syntax(Some(
                             "The d field of jwk is present and usages contains an entry which is \
@@ -375,8 +428,8 @@ pub(crate) fn import_key(
                                 .to_string(),
                         )));
                     }
-                    if jwk.d.is_none() &&
-                        usages
+                    if jwk.d.is_none()
+                        && usages
                             .iter()
                             .any(|usage| !matches!(usage, KeyUsage::Encrypt | KeyUsage::WrapKey))
                     {
@@ -571,7 +624,7 @@ pub(crate) fn import_key(
                 // interpreting jwk according to Section 6.3.2 of JSON Web Algorithms [JWA].
                 // Step 2.9.3. If privateKey is not a valid RSA private key according to [RFC3447],
                 // then throw a DataError.
-                let private_key = PrivateKey::from_components(
+                let private_key = import_private_components(
                     BoxedUint::from_be_slice_vartime(&n),
                     BoxedUint::from_be_slice_vartime(&e),
                     BoxedUint::from_be_slice_vartime(&d),
