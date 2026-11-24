@@ -16,6 +16,8 @@ The package version remains `0.53.0`. Local changes are limited to:
 
 - Remove the unused `cookie` dependency from `Cargo.toml`.
 - Remove `extern crate cookie;` from `src/lib.rs`.
+- Enable the `log` macro import only with the `server` feature, its only user,
+  so path consumers without that feature also build with warnings denied.
 
 This removes the dependency carrying RUSTSEC-2026-0594 without changing
 WebDriver's protocol cookie types. All other source and manifest settings

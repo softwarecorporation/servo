@@ -6,7 +6,7 @@
 
 extern crate base64;
 extern crate icu_segmenter;
-#[macro_use]
+#[cfg_attr(feature = "server", macro_use)]
 extern crate log;
 extern crate http;
 extern crate serde;
